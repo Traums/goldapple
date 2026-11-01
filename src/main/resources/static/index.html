@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Золотое яблоко</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css?v=12">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#catalog" data-nav="catalog">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path fill="#e7d7a8" d="M16 5.2c.2 1.8 1.2 3 2.9 3.6-2 .4-3.3 1.8-4 4-.7-2.2-2-3.6-4-4 1.7-.5 2.7-1.8 2.9-3.6H16z"/>
+          <path fill="#d7bf86" d="M16 11.2c3.8 0 6.7 3 7 6.8.2 2.9-.7 5.4-2.6 7.4-1.4 1.6-3 2.3-4.4 2.3s-3-.7-4.4-2.3c-1.9-2-2.8-4.5-2.6-7.4.3-3.8 3.2-6.8 7-6.8z"/>
+        </svg>
+      </span>
+      <span class="brand-name">золотое<br>яблоко</span>
+    </a>
+
+    <nav class="nav">
+      <button class="nav-link is-active" type="button" data-nav="catalog">Каталог</button>
+      <button class="nav-link" type="button" data-nav="orders">Заказы</button>
+      <button class="nav-link" type="button" data-nav="analytics">Аналитика</button>
+      <button class="nav-link" type="button" data-nav="admin">Админ</button>
+    </nav>
+
+    <div class="top-actions">
+      <label class="customer-picker">
+        <span>Клиент</span>
+        <select id="customer-select" aria-label="Клиент"></select>
+      </label>
+      <button class="cart-button" id="open-cart" type="button">
+        Корзина
+        <span class="cart-count" id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="catalog-view">
+      <div class="hero">
+        <p class="eyebrow">Интернет-магазин косметики</p>
+        <h1>Уход, макияж и ароматы, которые хочется забрать с собой</h1>
+        <p class="hero-text">Соберите заказ и проверьте, хватает ли товаров на складе.</p>
+      </div>
+
+      <div class="filters" id="filters" role="tablist" aria-label="Категории"></div>
+      <div class="grid" id="product-grid"></div>
+    </section>
+
+    <section id="orders-view" class="hidden">
+      <div class="section-head">
+        <p class="eyebrow">История</p>
+        <h1 id="orders-title">Заказы</h1>
+      </div>
+      <form id="order-form" class="editor hidden">
+        <select id="order-customer" aria-label="Клиент заказа"></select>
+        <div id="order-lines"></div>
+        <button class="button button-ghost button-small" id="add-order-line" type="button">Добавить товар</button>
+        <div class="row-actions">
+          <button class="button button-solid button-small" type="submit">Сохранить</button>
+          <button class="button button-ghost button-small" id="close-order-form" type="button">Закрыть</button>
+        </div>
+      </form>
+      <div id="orders-list" class="orders"></div>
+    </section>
+
+    <section id="admin-view" class="hidden">
+      <div class="section-head">
+        <p class="eyebrow">Администрирование</p>
+        <h1>Панель магазина</h1>
+      </div>
+      <div class="admin-grid">
+        <section class="panel" aria-labelledby="users-heading">
+          <div class="panel-head">
+            <h2 id="users-heading">Клиенты</h2>
+            <button class="button button-solid button-small" id="new-customer" type="button">Новый клиент</button>
+          </div>
+          <form id="customer-form" class="editor hidden">
+            <input id="customer-first" required maxlength="100" placeholder="Имя" aria-label="Имя">
+            <input id="customer-last" required maxlength="100" placeholder="Фамилия" aria-label="Фамилия">
+            <input id="customer-phone" required maxlength="20" placeholder="Телефон" aria-label="Телефон">
+            <input id="customer-birth" type="date" aria-label="Дата рождения">
+            <select id="customer-status" aria-label="Статус клиента">
+              <option value="ACTIVE">Активен</option>
+              <option value="BLOCKED">Заблокирован</option>
+            </select>
+            <div class="row-actions">
+              <button class="button button-solid button-small" type="submit">Сохранить</button>
+              <button class="button button-ghost button-small" id="close-customer-form" type="button">Закрыть</button>
+            </div>
+          </form>
+          <div id="customer-admin-list"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="orders-admin-heading">
+          <div class="panel-head">
+            <h2 id="orders-admin-heading">Заказы</h2>
+          </div>
+          <div class="filters" id="order-filters"></div>
+          <div id="order-admin-list"></div>
+        </section>
+
+        <section class="panel panel-span" aria-labelledby="products-heading">
+          <div class="panel-head">
+            <h2 id="products-heading">Товары</h2>
+            <button class="button button-solid button-small" id="new-product" type="button">Новый товар</button>
+          </div>
+          <form id="product-form" class="editor editor-wide hidden">
+            <input id="product-sku" required maxlength="32" placeholder="Артикул" aria-label="Артикул" pattern="[A-Za-z0-9-]+">
+            <input id="product-name" required maxlength="200" placeholder="Название" aria-label="Название">
+            <input id="product-brand" required maxlength="100" placeholder="Бренд" aria-label="Бренд">
+            <select id="product-category" aria-label="Категория">
+              <option value="SKINCARE">Уход</option>
+              <option value="MAKEUP">Макияж</option>
+              <option value="HAIRCARE">Волосы</option>
+              <option value="FRAGRANCE">Парфюмерия</option>
+            </select>
+            <input id="product-price" required type="number" min="0" step="0.01" placeholder="Цена" aria-label="Цена">
+            <input id="product-stock" required type="number" min="0" max="100000" step="1" placeholder="Остаток" aria-label="Остаток">
+            <select id="product-status" aria-label="Статус товара">
+              <option value="ACTIVE">В наличии</option>
+              <option value="OUT_OF_STOCK">Нет в наличии</option>
+              <option value="ARCHIVED">Снят с продажи</option>
+            </select>
+            <input id="product-image" required maxlength="500" placeholder="Ссылка на изображение" aria-label="Ссылка на изображение">
+            <div class="row-actions">
+              <button class="button button-solid button-small" type="submit">Сохранить</button>
+              <button class="button button-ghost button-small" id="close-product-form" type="button">Закрыть</button>
+            </div>
+          </form>
+          <div id="product-admin-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="analytics-view" class="hidden">
+      <div class="section-head">
+        <p class="eyebrow">Сводка</p>
+        <h1>Аналитика заказов</h1>
+      </div>
+      <div id="analytics-body"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>золотое яблоко</span>
+    <span>Учебная витрина</span>
+  </footer>
+
+  <div class="overlay hidden" id="overlay"></div>
+  <aside class="drawer hidden" id="cart-drawer" aria-label="Корзина">
+    <div class="drawer-head">
+      <div>
+        <p class="eyebrow">Ваш заказ</p>
+        <h2>Корзина</h2>
+      </div>
+      <button class="icon-button" id="close-cart" type="button" aria-label="Закрыть корзину">×</button>
+    </div>
+    <div class="drawer-body" id="cart-body"></div>
+    <div class="drawer-foot">
+      <p class="notice hidden" id="cart-notice"></p>
+      <div class="total-row">
+        <span>Сумма</span>
+        <strong id="cart-total">0 ₽</strong>
+      </div>
+      <div class="drawer-actions">
+        <button class="button button-ghost" id="check-order" type="button">Проверить</button>
+        <button class="button button-solid" id="create-order" type="button">Оформить</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast hidden" id="toast" role="status"></div>
+  <script src="/js/app.js?v=10"></script>
+</body>
+</html>

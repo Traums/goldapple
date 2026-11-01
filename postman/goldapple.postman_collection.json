@@ -1,0 +1,786 @@
+{
+  "info": {
+    "name": "Золотое яблоко",
+    "description": "API магазина «Золотое яблоко».\n\nЗапустите приложение и импортируйте коллекцию. Переменная baseUrl уже равна http://localhost:8080.\n\nДанные сида:\n- клиенты 1–3: Anastasia Cherevko (ACTIVE), Ivan Petrov (BLOCKED), Maria Sokolova (ACTIVE, заказов нет)\n- ещё 45 клиентов с телефонами +7904…, часть из них BLOCKED\n- 200 дополнительных заказов этих клиентов: NEW, PAID, CANCELLED и COMPLETED, в заказе 1–3 позиции\n- товар 6 — бальзам для губ, остаток 1\n- товар 7 — маска для волос, OUT_OF_STOCK\n- товар 8 — палетка Nude, ARCHIVED\n- заказ 2 — PAID, заказ 3 — NEW\n\n«Создать заказ» записывает id ответа в переменную orderId. «Оплачен» и «Завершить» берут этот id. Создание уменьшает остаток. Отмена доступна только из статуса NEW и возвращает товар на склад.\n\nВитрина: http://localhost:8080/\nSwagger: http://localhost:8080/swagger-ui.html",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "customerId",
+      "value": "1"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "orderId",
+      "value": "3"
+    }
+  ],
+  "item": [
+    {
+      "name": "Клиенты",
+      "item": [
+        {
+          "name": "Получить список клиентов",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/customers",
+            "description": "Все клиенты по возрастанию id."
+          }
+        },
+        {
+          "name": "Получить клиента",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/customers/{{customerId}}",
+            "description": "По умолчанию клиент 1, Anastasia Cherevko."
+          }
+        },
+        {
+          "name": "Получить заказы клиента",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/customers/{{customerId}}/orders",
+            "description": "Краткие заказы без состава. У клиента 3 список пустой."
+          }
+        },
+        {
+          "name": "Создать клиента",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Создан', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('customerId', String(body.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alina\",\n  \"lastName\": \"Morozova\",\n  \"phone\": \"+79030001122\",\n  \"birthDate\": \"1994-03-12\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/customers",
+            "description": "Ответ 201 и заголовок Location. Id сохраняется в customerId, следующие запросы клиента пойдут уже к нему."
+          }
+        },
+        {
+          "name": "Изменить клиента",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alina\",\n  \"lastName\": \"Morozova\",\n  \"phone\": \"+79030001122\",\n  \"birthDate\": \"1994-03-12\",\n  \"status\": \"BLOCKED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/customers/{{customerId}}",
+            "description": "Тело передаётся целиком: имя, фамилия, телефон, дата рождения и статус. Статус BLOCKED запрещает новые заказы этого клиента."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Товары",
+      "item": [
+        {
+          "name": "Получить каталог",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products",
+            "description": "Десять товаров сида: цена, остаток, статус и ссылка на изображение."
+          }
+        },
+        {
+          "name": "Получить товар",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products/{{productId}}",
+            "description": "По умолчанию товар 1, сыворотка с витамином C."
+          }
+        },
+        {
+          "name": "Создать товар",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Создан', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('productId', String(body.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"LL-CREAM-50\",\n  \"name\": \"Крем для лица, 50 мл\",\n  \"brand\": \"Lumière Lab\",\n  \"category\": \"SKINCARE\",\n  \"price\": 1290.00,\n  \"stockQuantity\": 12,\n  \"status\": \"ACTIVE\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/v1/products",
+            "description": "Ответ 201. Id записывается в productId. Повтор артикула даёт 409 PRODUCT_SKU_TAKEN."
+          }
+        },
+        {
+          "name": "Изменить товар",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"LL-CREAM-50\",\n  \"name\": \"Крем для лица, 40 мл\",\n  \"brand\": \"Lumière Lab\",\n  \"category\": \"SKINCARE\",\n  \"price\": 990.50,\n  \"stockQuantity\": 0,\n  \"status\": \"OUT_OF_STOCK\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/v1/products/{{productId}}",
+            "description": "Тело передаётся целиком. Запускайте после «Создать товар», иначе изменится товар из productId, по умолчанию сыворотка."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Заказы",
+      "item": [
+        {
+          "name": "Получить все заказы",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "Заказы с составом, сначала более новые."
+          }
+        },
+        {
+          "name": "Получить заказ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+            "description": "По умолчанию заказ 3: бальзам и крем для рук, статус NEW."
+          }
+        },
+        {
+          "name": "Проверить заказ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/check",
+            "description": "Ничего не сохраняет и не меняет склад. Успешная проверка: 200, allowed=true и totalAmount."
+          }
+        },
+        {
+          "name": "Создать заказ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Создан', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.collectionVariables.set('orderId', String(body.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "Ответ 201 и заголовок Location. Остаток товара 10 уменьшается на 1. Id заказа записывается в orderId."
+          }
+        },
+        {
+          "name": "Отметить оплаченным",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/status",
+            "description": "Допустимый переход NEW → PAID. Запускайте после «Создать заказ»."
+          }
+        },
+        {
+          "name": "Завершить заказ",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/status",
+            "description": "Допустимый переход PAID → COMPLETED. Склад при этом не меняется."
+          }
+        },
+        {
+          "name": "Отменить заказ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}/cancel",
+            "description": "Только статус NEW. Остаток по позициям возвращается на склад. Для заказа 3 из сида это бальзам (товар 6) и крем для рук (товар 9)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Отказы",
+      "item": [
+        {
+          "name": "Клиент не найден",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/customers/99",
+            "description": "404, code = CUSTOMER_NOT_FOUND."
+          }
+        },
+        {
+          "name": "Товар не найден",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/products/99",
+            "description": "404, code = PRODUCT_NOT_FOUND."
+          }
+        },
+        {
+          "name": "Заказ не найден",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders/999",
+            "description": "404, code = ORDER_NOT_FOUND."
+          }
+        },
+        {
+          "name": "Проверка: клиент заблокирован",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 2,\n  \"items\": [\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/check",
+            "description": "200, allowed=false, reason=CUSTOMER_BLOCKED. Заказ не создаётся."
+          }
+        },
+        {
+          "name": "Проверка: недостаточно товара",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 6,\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/check",
+            "description": "200, allowed=false, reason=INSUFFICIENT_STOCK. У бальзама остаток 1, пока заказ 3 не отменён."
+          }
+        },
+        {
+          "name": "Проверка: нет в наличии",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 7,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/check",
+            "description": "200, allowed=false, reason=PRODUCT_OUT_OF_STOCK."
+          }
+        },
+        {
+          "name": "Проверка: товар снят с продажи",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 8,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/check",
+            "description": "200, allowed=false, reason=PRODUCT_ARCHIVED."
+          }
+        },
+        {
+          "name": "Создать: клиент заблокирован",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 2,\n  \"items\": [\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "409, code = CUSTOMER_BLOCKED."
+          }
+        },
+        {
+          "name": "Создать: товар снят с продажи",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 8,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "409, code = PRODUCT_ARCHIVED."
+          }
+        },
+        {
+          "name": "Создать: нет в наличии",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 7,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "409, code = PRODUCT_OUT_OF_STOCK."
+          }
+        },
+        {
+          "name": "Создать: недостаточно товара",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 6,\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "409, code = INSUFFICIENT_STOCK."
+          }
+        },
+        {
+          "name": "Создать: товар повторяется",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    },\n    {\n      \"productId\": 10,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "400, code = DUPLICATE_PRODUCT."
+          }
+        },
+        {
+          "name": "Создать: пустой состав",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "400, code = VALIDATION_ERROR."
+          }
+        },
+        {
+          "name": "Создать: количество больше 20",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"items\": [\n    {\n      \"productId\": 9,\n      \"quantity\": 21\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders",
+            "description": "400, code = VALIDATION_ERROR. В одной позиции не больше 20 штук."
+          }
+        },
+        {
+          "name": "Отменить оплаченный заказ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders/2/cancel",
+            "description": "409, code = ORDER_CANNOT_BE_CANCELLED. Заказ 2 уже PAID."
+          }
+        },
+        {
+          "name": "Недопустимый переход статуса",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"NEW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/orders/2/status",
+            "description": "409, code = ORDER_STATUS_NOT_ALLOWED. Из PAID нельзя вернуть заказ в NEW."
+          }
+        }
+      ]
+    }
+  ]
+}
